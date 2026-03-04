@@ -24,7 +24,7 @@ def chat():
 
         if summary is None:
             return jsonify({
-                "reply": f"No todos found for userId {user_id}."
+                "reply": f"Hmm... I couldn't find any tasks for that user."
             })
 
         reply = (
