@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Zavoir Todo Bot</title>
+    <title>Zevoir Todo Bot</title>
 
     <link
       rel="stylesheet"
@@ -39,7 +39,7 @@
         // BOT TYPING
         const typing = document.createElement("div");
         typing.className = "bot-msg";
-        typing.innerText = "Bot is typing...";
+        typing.innerText = "Just a moment, getting the details....";
         chatBox.appendChild(typing);
 
         autoScroll();
@@ -64,7 +64,7 @@
             chatBox.appendChild(botReply);
 
             autoScroll();
-          }, 5000);
+          }, 1000);
         } catch (error) {
           typing.remove();
 
