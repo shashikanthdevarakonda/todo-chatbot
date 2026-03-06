@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Zevoir Todo Bot</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='style.css') }}"
@@ -11,7 +11,13 @@
 
   <body>
     <div class="chat-container">
-      <div class="chat-header">🤖 Zevoir Assistant</div>
+      <div class="chat-header">
+        <img
+          src="{{ url_for('static', filename='images/robot.png') }}"
+          class="logo"
+        />
+        <span>Zevoir Assistant</span>
+      </div>
 
       <div id="chat-box" class="chat-box"></div>
 
@@ -21,74 +27,112 @@
         <button class="clear-btn" onclick="clearChat()">Clear Chat</button>
       </div>
     </div>
-
-    <script>
-      async function sendMessage() {
-        const input = document.getElementById("message");
-        const chatBox = document.getElementById("chat-box");
-        const message = input.value.trim();
-
-        if (!message) return;
-
-        // USER MESSAGE
-        chatBox.innerHTML += `<div class="user-msg">${message}</div>`;
-        input.value = "";
-
-        autoScroll();
-
-        // BOT TYPING
-        const typing = document.createElement("div");
-        typing.className = "bot-msg";
-        typing.innerText = "Just a moment, getting the details....";
-        chatBox.appendChild(typing);
-
-        autoScroll();
-
-        try {
-          const response = await fetch("/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message }),
-          });
-
-          const data = await response.json();
-
-          // delay bot reply (5 seconds)
-          setTimeout(() => {
-            typing.remove();
-
-            const botReply = document.createElement("div");
-            botReply.className = "bot-msg";
-            botReply.innerText = data.reply;
-
-            chatBox.appendChild(botReply);
-
-            autoScroll();
-          }, 1000);
-        } catch (error) {
-          typing.remove();
-
-          chatBox.innerHTML += `<div class="bot-msg">Something went wrong. Please try again.</div>`;
-        }
-      }
-
-      function autoScroll() {
-        const chatBox = document.getElementById("chat-box");
-        chatBox.scrollTop = chatBox.scrollHeight;
-      }
-
-      function clearChat() {
-        document.getElementById("chat-box").innerHTML = "";
-      }
-
-      // ENTER KEY
-      document
-        .getElementById("message")
-        .addEventListener("keypress", function (e) {
-          if (e.key === "Enter") {
-            sendMessage();
-          }
-        });
-    </script>
   </body>
 </html>
+
+<script>
+  let botWorking = false;
+
+  // WELCOME MESSAGE
+  function showWelcomeMessage() {
+    const chatBox = document.getElementById("chat-box");
+
+    const welcome = document.createElement("div");
+    welcome.className = "bot-msg";
+    welcome.innerText ="Hey! 👋 Welcome to Zevoir Assistant.\nEnter a userId (like 1, 2, 3).";
+
+    chatBox.appendChild(welcome);
+  }
+
+  // SEND MESSAGE FUNCTION
+  async function sendMessage() {
+    if (botWorking) return;
+
+    const input = document.getElementById("message");
+    const chatBox = document.getElementById("chat-box");
+    const sendBtn = document.querySelector("button");
+
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    botWorking = true;
+
+    // disable typing
+    input.disabled = true;
+    sendBtn.disabled = true;
+
+    // USER MESSAGE
+    chatBox.innerHTML += `<div class="user-msg">${message}</div>`;
+    input.value = "";
+
+    autoScroll();
+
+    // BOT TYPING
+    const typing = document.createElement("div");
+    typing.className = "bot-msg";
+    typing.innerText = "Just a moment, getting the details...";
+    chatBox.appendChild(typing);
+
+    autoScroll();
+
+    try {
+      const response = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+
+      const data = await response.json();
+
+      // delay bot reply (2 seconds)
+      setTimeout(() => {
+        typing.remove();
+
+        const botReply = document.createElement("div");
+        botReply.className = "bot-msg";
+        botReply.innerText = data.reply;
+
+        chatBox.appendChild(botReply);
+
+        autoScroll();
+
+        // enable typing again
+        input.disabled = false;
+        sendBtn.disabled = false;
+        input.focus();
+
+        botWorking = false;
+      }, 2000);
+    } catch (error) {
+      typing.remove();
+
+      chatBox.innerHTML += `<div class="bot-msg">Something went wrong. Please try again.</div>`;
+
+      input.disabled = false;
+      sendBtn.disabled = false;
+
+      botWorking = false;
+    }
+  }
+
+  function autoScroll() {
+    const chatBox = document.getElementById("chat-box");
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function clearChat() {
+    document.getElementById("chat-box").innerHTML = "";
+    showWelcomeMessage(); // show welcome again after clearing
+  }
+
+  // ENTER KEY
+  document.getElementById("message").addEventListener("keypress", function (e) {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  });
+
+  // PAGE LOAD
+  window.onload = showWelcomeMessage;
+</script>
